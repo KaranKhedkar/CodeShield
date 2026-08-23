@@ -2,46 +2,82 @@
 
 CodeShield is a local-first, AI-driven security triage tool designed to eliminate alert fatigue from static analysis scanners. 
 
-Static analyzers like Semgrep are incredibly fast and accurate at finding *potential* vulnerabilities, but they often lack the context to determine if a vulnerability is *actually exploitable*. CodeShield solves this by sitting on top of Semgrep and applying a three-step triage pipeline:
-1. **Reachability Scoring**: Uses `tree-sitter` to parse your codebase and determine if the vulnerable function is actually imported or called elsewhere in the project.
-2. **Knowledge Retrieval (RAG)**: Queries a local `ChromaDB` vector database containing OWASP Top 10 and CWE documentation to ground the analysis in vetted security standards.
-3. **Local LLM Investigation**: Feeds the snippet, the call-graph context, and the retrieved security guidelines into a local instance of **Ollama (Qwen3 8B)** to reason about exploitability and generate a cited fix.
+Static analyzers (like Semgrep) are incredibly fast at finding *potential* vulnerabilities but lack the context to determine if a vulnerability is *actually exploitable*. CodeShield acts as an AI security analyst on top of Semgrep, applying a multi-stage triage pipeline to drastically reduce false positives.
 
-All of this happens locally—no code leaves your machine.
+## 🚀 Features
 
----
-
-## 📸 Dashboard
-
-CodeShield features a modern, glassmorphic React dashboard to visualize findings. Instead of sifting through massive JSON files, you can sort findings by their calculated **Risk Score** (a blend of inherent severity and code reachability).
-
-*(Screenshot placeholder: Imagine a stunning dark-mode dashboard with glass panels, a sidebar of historical scans, and an expandable data table highlighting a High Risk SQL Injection.)*
+- **Context-Aware AI Analysis**: Uses a local LLM to reason about exploitability based on surrounding code context.
+- **RAG-Backed Security Guidelines**: Queries a local `ChromaDB` vector database containing OWASP Top 10 and CWE documentation to ground the analysis in vetted security standards.
+- **High-Performance Architecture**: 
+  - **Parallel Execution**: Uses concurrent thread pooling to process multiple vulnerabilities simultaneously, dramatically reducing scan time.
+  - **Threshold Filtering**: Intelligently bypasses LLM inference for low-risk findings to preserve compute resources.
+  - **Hybrid Persistent Caching**: Out-of-the-box SHA-256 fingerprint caching using SQLite to prevent duplicate LLM calls across rescans, with automatic fallback to **Redis** for distributed, ultra-fast caching in production.
+- **Modern Glassmorphism UI**: A beautifully crafted React dashboard that sorts findings by dynamic Risk Scores instead of raw JSON.
 
 ---
 
-## 🚀 Setup & Installation
+## 📸 Screenshots
+
+*(Attach screenshots of the application below)*
+
+- **Landing Page**: 
+  ![Landing Page](./docs/landing-page.png)
+
+- **Dashboard**:
+  ![Dashboard](./docs/dashboard.png)
+
+- **Scan Page**:
+  ![Scan Page](./docs/scan.png)
+
+- **Vulnerability Explanation**:
+  ![Explanation](./docs/explanation.png)
+
+---
+
+## 🧠 Architecture
+
+The system is decoupled into a high-performance backend and a modern frontend client:
+
+**Backend (FastAPI)**
+- **Static Analysis**: Semgrep CLI
+- **LLM Engine**: Local Ollama (e.g., Llama 3) with a graceful failover to the Groq API.
+- **Vector Database**: ChromaDB + `sentence-transformers` (`all-MiniLM-L6-v2`)
+- **Database / Caching**: SQLAlchemy, SQLite, Redis
+
+**Frontend (React/Vite)**
+- **Styling**: Tailwind CSS (Semantic Design Tokens)
+- **Icons**: Lucide React
+- **Architecture**: Client-side animated hero previews with polling-based dashboard data fetching.
+
+---
+
+## 🛠️ Setup & Installation
 
 ### Prerequisites
 1. **Python 3.10+**
 2. **Node.js 18+**
 3. **Semgrep** (`pip install semgrep`)
-4. **Ollama**: Install [Ollama](https://ollama.com/) and pull the Qwen model: `ollama run qwen3:8b` (or whichever local model you prefer).
+4. *(Optional)* **Ollama**: Install [Ollama](https://ollama.com/) and pull a model (e.g., `ollama run llama3.1`). If you skip this, just provide a Groq API key in your `.env`.
 
 ### 1. Start the Backend API
-You will need two terminals. In the first terminal:
 ```bash
 cd backend
+# Create and activate virtual environment
+python -m venv venv
 # Windows: .\venv\Scripts\activate | Mac/Linux: source venv/bin/activate
-pip install -r requirements.txt 
+
+# Install dependencies
+pip install fastapi uvicorn sqlalchemy requests pydantic chromadb sentence-transformers python-dotenv redis
 
 # Build the RAG Corpus (only needed once)
 python rag/indexer.py
 
-# Start the FastAPI server (bind to localhost to resolve Vite IPv6 proxy issues)
-.\venv\Scripts\activate
+# Set your Groq API key (if not using local Ollama)
+# Edit backend/.env and add: GROQ_API_KEY=your_key_here
+
+# Start the FastAPI server
 uvicorn app.main:app --host localhost --port 8000
 ```
-*(Note: If you don't have Ollama running locally, the backend will gracefully fallback to the Groq API. Just create a `.env` file in the `backend` folder with `GROQ_API_KEY=your_key_here`)*
 
 ### 2. Start the Frontend Dashboard
 ```bash
@@ -49,14 +85,5 @@ cd frontend
 npm install
 npm run dev
 ```
-Open your browser to `http://localhost:5173`. Enter the absolute path to a local repository and click "Run Scan".
 
----
-
-## 🧠 Architecture Overview
-- **Backend Core**: FastAPI, SQLite (SQLAlchemy)
-- **Static Analysis**: Semgrep (CLI wrapper)
-- **Reachability**: `tree-sitter`, `tree-sitter-python`
-- **RAG & Vector DB**: ChromaDB, `sentence-transformers` (`all-MiniLM-L6-v2`)
-- **LLM Engine**: Ollama HTTP API
-- **Frontend**: React, Vite, Tailwind CSS, Lucide Icons
+Open your browser to `http://localhost:5173`. Enter the absolute path to a local repository and click **Run Scan**!
