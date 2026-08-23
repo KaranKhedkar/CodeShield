@@ -3,6 +3,7 @@ import { Shield, ShieldAlert, CheckCircle, ChevronRight, Loader, AlertTriangle, 
 
 export default function Dashboard() {
   const [targetDir, setTargetDir] = useState('e:\\WEB_DEV\\Projects\\codeShield');
+  const [gitToken, setGitToken] = useState('');
   const [scanning, setScanning] = useState(false);
   const [scanId, setScanId] = useState(null);
   const [scanData, setScanData] = useState(null);
@@ -61,7 +62,7 @@ export default function Dashboard() {
       const res = await fetch('http://localhost:8000/scan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ target_dir: targetDir })
+        body: JSON.stringify({ target_dir: targetDir, git_token: gitToken || null })
       });
       if (res.ok) {
         const data = await res.json();
@@ -134,15 +135,24 @@ export default function Dashboard() {
           </div>
         </div>
         
-        <div className="flex gap-4 items-center w-full md:w-auto">
-          <div className="relative group flex-1 md:w-96">
+        <div className="flex flex-col md:flex-row gap-4 items-center w-full md:w-auto">
+          <div className="relative group w-full md:w-80">
             <Network className="absolute left-4 top-1/2 -translate-y-1/2 text-core-muted w-4 h-4" />
             <input 
               type="text" 
               value={targetDir} 
               onChange={e => setTargetDir(e.target.value)}
-              placeholder="Target Directory Path"
+              placeholder="Local Path or GitHub URL"
               className="w-full bg-core-surface border border-core-border rounded-none pl-11 pr-4 py-3 text-sm text-core-text focus:outline-none focus:border-accent-verified focus:ring-1 focus:ring-accent-verified transition-colors font-mono"
+            />
+          </div>
+          <div className="relative group w-full md:w-48">
+            <input 
+              type="password" 
+              value={gitToken} 
+              onChange={e => setGitToken(e.target.value)}
+              placeholder="Git Token (Optional)"
+              className="w-full bg-core-surface border border-core-border rounded-none px-4 py-3 text-sm text-core-text focus:outline-none focus:border-accent-verified focus:ring-1 focus:ring-accent-verified transition-colors font-mono"
             />
           </div>
           <button 

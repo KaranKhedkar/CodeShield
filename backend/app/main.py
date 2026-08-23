@@ -6,6 +6,9 @@ from typing import List, Optional
 import os
 import sys
 import concurrent.futures
+import tempfile
+import subprocess
+import urllib.parse
 
 # Import our core logic
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
@@ -32,16 +35,33 @@ app.add_middleware(
 
 class ScanRequest(BaseModel):
     target_dir: str
+    git_token: Optional[str] = None
 
-def perform_scan_task(target_dir: str, scan_id: str):
+def perform_scan_task(target_dir: str, scan_id: str, git_token: Optional[str] = None):
     # Create a fresh database session for the background task
     db = next(get_db())
+    
+    is_git = target_dir.startswith("http://") or target_dir.startswith("https://") or target_dir.endswith(".git")
+    temp_dir_obj = None
+    scan_target = target_dir
+
     try:
+        if is_git:
+            temp_dir_obj = tempfile.TemporaryDirectory()
+            scan_target = temp_dir_obj.name
+            
+            clone_url = target_dir
+            if git_token and clone_url.startswith("https://"):
+                parsed = urllib.parse.urlparse(clone_url)
+                clone_url = parsed._replace(netloc=f"{git_token}@{parsed.netloc}").geturl()
+
+            subprocess.run(["git", "clone", clone_url, scan_target], check=True)
+
         # 1. Detection (Semgrep)
-        raw_findings = run_semgrep(target_dir)
+        raw_findings = run_semgrep(scan_target)
         
         # 2. Reachability & Risk Scoring
-        findings_with_risk = enhance_findings_with_risk(raw_findings, target_dir)
+        findings_with_risk = enhance_findings_with_risk(raw_findings, scan_target)
         
         # 3. LLM Investigation Pipeline
         def process_finding(finding):
@@ -103,18 +123,23 @@ def perform_scan_task(target_dir: str, scan_id: str):
             db.commit()
     finally:
         db.close()
+        if temp_dir_obj:
+            temp_dir_obj.cleanup()
 
 @app.post("/scan")
 def trigger_scan(request: ScanRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
-    if not os.path.exists(request.target_dir):
+    target = request.target_dir
+    is_git = target.startswith("http://") or target.startswith("https://") or target.endswith(".git")
+
+    if not is_git and not os.path.exists(target):
         raise HTTPException(status_code=400, detail="Target directory does not exist locally.")
         
-    new_scan = models.ScanHistory(target_dir=request.target_dir, status="running")
+    new_scan = models.ScanHistory(target_dir=target, status="running")
     db.add(new_scan)
     db.commit()
     db.refresh(new_scan)
     
-    background_tasks.add_task(perform_scan_task, request.target_dir, new_scan.id)
+    background_tasks.add_task(perform_scan_task, request.target_dir, new_scan.id, request.git_token)
     
     return {"message": "Scan started", "scan_id": new_scan.id}
 

@@ -7,6 +7,7 @@ Static analyzers (like Semgrep) are incredibly fast at finding *potential* vulne
 ## 🚀 Features
 
 - **Context-Aware AI Analysis**: Uses a local LLM to reason about exploitability based on surrounding code context.
+- **GitHub Repository Scanning**: Paste any GitHub URL (public or private) to instantly clone, scan, and securely clean up the codebase.
 - **RAG-Backed Security Guidelines**: Queries a local `ChromaDB` vector database containing OWASP Top 10 and CWE documentation to ground the analysis in vetted security standards.
 - **High-Performance Architecture**: 
   - **Parallel Execution**: Uses concurrent thread pooling to process multiple vulnerabilities simultaneously, dramatically reducing scan time.

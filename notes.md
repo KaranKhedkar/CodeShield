@@ -158,3 +158,17 @@ To make scanning larger repositories significantly faster, we implemented the fo
 2. **Threshold Filtering**: AI triage is now intentionally bypassed for "Low Risk" (score < 40) informational findings to preserve compute resources and prioritize high-risk, reachable vulnerabilities.
 3. **Semgrep Tuning**: Hardcoded multi-threading (`--jobs 4`) and additional ignore paths (`build`, `dist`) to the underlying static analysis engine.
 4. **Hybrid Persistent Caching (Redis + SQLite)**: Out-of-the-box persistent caching. The backend attempts to connect to Redis (if `REDIS_URL` is set) for ultra-fast, distributed caching. If Redis is unavailable, it seamlessly falls back to a local SQLite database (`llm_cache.db`). A SHA-256 fingerprint of the vulnerability snippet and rule ID prevents duplicate LLM requests for unchanged code across rescans.
+
+### v2.0 LangGraph Multi-Agent Architecture
+To increase the quality of the LLM analysis, we migrated from a monolithic single-prompt architecture to a multi-agent orchestration using langgraph. The pipeline is now split into two specialized agents:
+1. **Analyst Node**: Focuses purely on determining exploitability and assigning a confidence score.
+2. **Fixer Node**: Drafts a precise code remediation based on the finding and the Analyst's report.
+
+This architecture sets the foundation for adding more tools (e.g., repository navigation, dependency checking) in the future while seamlessly integrating with our existing hybrid caching layer.
+
+### v1.2 GitHub Repository Scanning
+We expanded CodeShield to accept both local directory paths and remote GitHub URLs. If a remote URL is detected, the FastAPI backend uses Python's built-in 	empfile.TemporaryDirectory() to securely clone the repository. 
+
+To support private repositories, the React frontend passes an optional GitHub Personal Access Token (PAT) which the backend securely injects into the HTTPS clone URL (e.g., \https://<token>@github.com/...\). 
+
+Crucially, because the 	empfile block cleans itself up automatically in the inally clause of the background task, the cloned repository is instantly deleted from disk as soon as the static analyzer and reachability engines finish scanning it. This ensures user hard drives aren't bloated with stale code repositories, since the UI only requires the snippet cached in the SQLite database to display the AI findings.

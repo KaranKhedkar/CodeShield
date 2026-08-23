@@ -182,10 +182,34 @@ def analyze_finding(finding: Dict[str, Any], rag_context: str) -> Dict[str, str]
         conn.close()
         return json.loads(row[0])
         
-    print(f"Cache miss. Running LLM investigation for {finding.get('id')}...")
-    prompt = construct_prompt(finding, rag_context)
+    print(f"Cache miss. Running LangGraph multi-agent investigation for {finding.get('id')}...")
     
-    analysis_result = query_llm(prompt)
+    try:
+        from llm.graph import app
+        
+        initial_state = {
+            "finding": finding,
+            "rag_context": rag_context,
+            "analysis": "",
+            "confidence": "",
+            "fix_recommendation": ""
+        }
+        
+        # Invoke the LangGraph orchestration
+        final_state = app.invoke(initial_state)
+        
+        analysis_result = {
+            "explanation": final_state.get("analysis", "Analysis failed"),
+            "confidence": final_state.get("confidence", "Low"),
+            "fix": final_state.get("fix_recommendation", "N/A")
+        }
+    except Exception as e:
+        print(f"LangGraph execution error: {e}")
+        analysis_result = {
+            "explanation": f"LLM Analysis failed during multi-agent execution: {e}",
+            "confidence": "Low",
+            "fix": "N/A"
+        }
     
     # Save to cache only if it didn't fail
     if "failed" not in analysis_result.get("explanation", "").lower():
