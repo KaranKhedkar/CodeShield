@@ -10,3 +10,5 @@ redis
 langgraph
 langchain_groq
 groq
+tree-sitter
+tree-sitter-python
