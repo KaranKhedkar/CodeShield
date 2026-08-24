@@ -29,7 +29,7 @@ export default function Dashboard() {
 
   const fetchHistory = async () => {
     try {
-      const res = await fetch('http://localhost:8000/history');
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/history`);
       if (res.ok) {
         const data = await res.json();
         setHistory(data);
@@ -41,7 +41,7 @@ export default function Dashboard() {
 
   const fetchScanResult = async (id) => {
     try {
-      const res = await fetch(`http://localhost:8000/scan/${id}`);
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/scan/${id}`);
       if (res.ok) {
         const data = await res.json();
         setScanData(data);
@@ -62,7 +62,7 @@ export default function Dashboard() {
     setSelectedFinding(null);
     
     try {
-      const res = await fetch('http://localhost:8000/scan', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/scan`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ target_dir: targetDir, git_token: gitToken || null })
@@ -90,7 +90,7 @@ export default function Dashboard() {
   const deleteScan = async (id, e) => {
     e.stopPropagation();
     try {
-      const res = await fetch(`http://localhost:8000/history/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/scan/${id}`, { method: 'DELETE' });
       if (res.ok) {
         if (scanId === id) {
           setScanId(null);
@@ -128,7 +128,7 @@ export default function Dashboard() {
     const findingId = fixConfirmModal;
     setFixConfirmModal(null);
     try {
-      const res = await fetch(`http://localhost:8000/apply_fix/${findingId}`, { method: 'POST' });
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/apply_fix/${findingId}`, { method: 'POST' });
       if (res.ok) {
         setFixedFindings(prev => ({ ...prev, [findingId]: true }));
       } else {

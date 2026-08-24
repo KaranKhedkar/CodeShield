@@ -65,7 +65,11 @@ The system is decoupled into a high-performance backend and a modern frontend cl
 cd backend
 # Create and activate virtual environment
 python -m venv venv
-# Windows: .\venv\Scripts\activate | Mac/Linux: source venv/bin/activate
+
+# Windows: 
+.\venv\Scripts\activate 
+#Mac/Linux: 
+source venv/bin/activate
 
 # Install dependencies
 pip install fastapi uvicorn sqlalchemy requests pydantic chromadb sentence-transformers python-dotenv redis
