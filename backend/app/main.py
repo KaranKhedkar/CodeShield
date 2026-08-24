@@ -55,7 +55,7 @@ def perform_scan_task(target_dir: str, scan_id: str, git_token: Optional[str] = 
                 parsed = urllib.parse.urlparse(clone_url)
                 clone_url = parsed._replace(netloc=f"{git_token}@{parsed.netloc}").geturl()
 
-            subprocess.run(["git", "clone", clone_url, scan_target], check=True)
+            subprocess.run(["git", "-c", "http.version=HTTP/1.1", "-c", "http.postBuffer=524288000", "clone", clone_url, scan_target], check=True)
 
         # 1. Detection (Semgrep)
         raw_findings = run_semgrep(scan_target)
