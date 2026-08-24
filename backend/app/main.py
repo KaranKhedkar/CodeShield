@@ -86,7 +86,9 @@ def perform_scan_task(target_dir: str, scan_id: str, git_token: Optional[str] = 
                 "finding": finding,
                 "explanation": llm_result.get('explanation'),
                 "confidence": llm_result.get('confidence'),
-                "fix": llm_result.get('fix')
+                "fix": llm_result.get('fix'),
+                "patch_target": llm_result.get('patch_target'),
+                "patch_replacement": llm_result.get('patch_replacement')
             }
 
         # Process all findings in parallel
@@ -105,7 +107,9 @@ def perform_scan_task(target_dir: str, scan_id: str, git_token: Optional[str] = 
                 risk_score=finding.get('risk_score', 0),
                 explanation=res['explanation'],
                 confidence=res['confidence'],
-                fix_recommendation=res['fix']
+                fix_recommendation=res['fix'],
+                patch_target=res.get('patch_target'),
+                patch_replacement=res.get('patch_replacement')
             )
             db.add(db_finding)
         
@@ -164,7 +168,9 @@ def get_scan_results(scan_id: str, db: Session = Depends(get_db)):
                 "risk_score": f.risk_score,
                 "explanation": f.explanation,
                 "confidence": f.confidence,
-                "fix_recommendation": f.fix_recommendation
+                "fix_recommendation": f.fix_recommendation,
+                "patch_target": f.patch_target,
+                "patch_replacement": f.patch_replacement
             } for f in scan.findings
         ]
     }
@@ -189,3 +195,29 @@ def delete_scan(scan_id: str, db: Session = Depends(get_db)):
     db.delete(scan)
     db.commit()
     return {"message": "Scan deleted successfully"}
+
+@app.post("/apply_fix/{finding_id}")
+def apply_fix(finding_id: str, db: Session = Depends(get_db)):
+    finding = db.query(models.Finding).filter(models.Finding.id == finding_id).first()
+    if not finding:
+        raise HTTPException(status_code=404, detail="Finding not found")
+    if not finding.patch_target or not finding.patch_replacement:
+        raise HTTPException(status_code=400, detail="No automated patch available for this finding")
+    if not os.path.exists(finding.file_path):
+        raise HTTPException(status_code=404, detail="Target file no longer exists on disk")
+
+    try:
+        with open(finding.file_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+
+        if finding.patch_target not in content:
+            raise HTTPException(status_code=400, detail="Target code snippet not found in file (file may have been modified)")
+
+        new_content = content.replace(finding.patch_target, finding.patch_replacement)
+
+        with open(finding.file_path, 'w', encoding='utf-8') as f:
+            f.write(new_content)
+        return {"message": "Fix applied successfully!"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+

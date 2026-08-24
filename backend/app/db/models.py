@@ -29,5 +29,7 @@ class Finding(Base):
     explanation = Column(String, nullable=True)
     confidence = Column(String, nullable=True)
     fix_recommendation = Column(String, nullable=True)
+    patch_target = Column(String, nullable=True)
+    patch_replacement = Column(String, nullable=True)
 
     scan = relationship("ScanHistory", back_populates="findings")

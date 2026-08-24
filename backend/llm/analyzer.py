@@ -191,8 +191,9 @@ def analyze_finding(finding: Dict[str, Any], rag_context: str) -> Dict[str, str]
             "finding": finding,
             "rag_context": rag_context,
             "analysis": "",
-            "confidence": "",
-            "fix_recommendation": ""
+            "fix_recommendation": "",
+            "patch_target": "",
+            "patch_replacement": ""
         }
         
         # Invoke the LangGraph orchestration
@@ -201,14 +202,18 @@ def analyze_finding(finding: Dict[str, Any], rag_context: str) -> Dict[str, str]
         analysis_result = {
             "explanation": final_state.get("analysis", "Analysis failed"),
             "confidence": final_state.get("confidence", "Low"),
-            "fix": final_state.get("fix_recommendation", "N/A")
+            "fix": final_state.get("fix_recommendation", "N/A"),
+            "patch_target": final_state.get("patch_target"),
+            "patch_replacement": final_state.get("patch_replacement")
         }
     except Exception as e:
         print(f"LangGraph execution error: {e}")
         analysis_result = {
             "explanation": f"LLM Analysis failed during multi-agent execution: {e}",
             "confidence": "Low",
-            "fix": "N/A"
+            "fix": "N/A",
+            "patch_target": None,
+            "patch_replacement": None
         }
     
     # Save to cache only if it didn't fail

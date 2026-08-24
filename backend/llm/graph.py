@@ -20,6 +20,8 @@ class GraphState(TypedDict):
     analysis: str
     confidence: str
     fix_recommendation: str
+    patch_target: str
+    patch_replacement: str
 
 def analyst_node(state: GraphState):
     """Analyzes the finding to determine exploitability."""
@@ -76,18 +78,32 @@ ANALYST REPORT:
 {analysis}
 
 Provide your recommended fix.
+You MUST also provide a strict machine-readable code patch.
+Set `patch_target` to the exact lines in the ORIGINAL SNIPPET that need to be replaced. This must match character-for-character.
+Set `patch_replacement` to your secure code that should replace the `patch_target`.
+
 Output STRICTLY in JSON format:
 {{
-    "fix": "The recommended fix or code rewrite."
+    "fix": "The recommended fix or code rewrite.",
+    "patch_target": "original lines to replace",
+    "patch_replacement": "secure lines to insert"
 }}
 """
     try:
         response = llm.invoke(prompt)
         result = json.loads(response.content)
-        return {"fix_recommendation": result.get("fix", "No fix generated.")}
+        return {
+            "fix_recommendation": result.get("fix", "No fix generated."),
+            "patch_target": result.get("patch_target"),
+            "patch_replacement": result.get("patch_replacement")
+        }
     except Exception as e:
         print(f"Fixer node error: {e}")
-        return {"fix_recommendation": f"Failed to generate fix: {str(e)}"}
+        return {
+            "fix_recommendation": f"Failed to generate fix: {str(e)}",
+            "patch_target": None,
+            "patch_replacement": None
+        }
 
 # Build graph
 workflow = StateGraph(GraphState)

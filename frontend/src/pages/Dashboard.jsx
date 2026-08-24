@@ -9,6 +9,9 @@ export default function Dashboard() {
   const [scanData, setScanData] = useState(null);
   const [history, setHistory] = useState([]);
   const [selectedFinding, setSelectedFinding] = useState(null);
+  const [fixConfirmModal, setFixConfirmModal] = useState(null);
+  const [fixError, setFixError] = useState(null);
+  const [fixedFindings, setFixedFindings] = useState({});
 
   useEffect(() => {
     fetchHistory();
@@ -116,6 +119,28 @@ export default function Dashboard() {
     }
   };
 
+  const triggerApplyFix = (findingId) => {
+    setFixConfirmModal(findingId);
+  };
+
+  const confirmApplyFix = async () => {
+    if (!fixConfirmModal) return;
+    const findingId = fixConfirmModal;
+    setFixConfirmModal(null);
+    try {
+      const res = await fetch(`http://localhost:8000/apply_fix/${findingId}`, { method: 'POST' });
+      if (res.ok) {
+        setFixedFindings(prev => ({ ...prev, [findingId]: true }));
+      } else {
+        const error = await res.json();
+        setFixError(`Failed to apply fix: ${error.detail}`);
+      }
+    } catch (e) {
+      console.error("Error applying fix:", e);
+      setFixError("Error applying fix. Check console.");
+    }
+  };
+
   const getRiskBadge = (score) => {
     if (score >= 70) return <span className="bg-red-500/10 text-red-400 border border-red-500/20 px-2 py-0.5 rounded text-xs font-mono font-bold flex items-center gap-1.5 w-fit"><ShieldAlert size={12}/> Critical</span>;
     if (score >= 40) return <span className="bg-accent-signal/10 text-accent-signal border border-accent-signal/20 px-2 py-0.5 rounded text-xs font-mono font-bold flex items-center gap-1.5 w-fit"><AlertTriangle size={12}/> Medium</span>;
@@ -123,6 +148,7 @@ export default function Dashboard() {
   };
 
   return (
+    <>
     <div className="min-h-screen p-6 md:p-10 max-w-[1600px] mx-auto font-sans relative overflow-hidden bg-core-bg text-core-text">
       <header className="flex flex-col md:flex-row items-center justify-between mb-12 gap-6 relative z-10">
         <div className="flex items-center gap-4">
@@ -363,12 +389,79 @@ export default function Dashboard() {
                   <div className="text-sm text-accent-verified bg-accent-verified/10 p-5 rounded border border-accent-verified/20 leading-relaxed font-mono">
                     {selectedFinding.fix_recommendation || 'No fix recommended.'}
                   </div>
+                  {selectedFinding.patch_replacement && (
+                    <button 
+                      onClick={() => fixedFindings[selectedFinding.id] ? null : triggerApplyFix(selectedFinding.id)}
+                      disabled={fixedFindings[selectedFinding.id]}
+                      className={`mt-4 w-full py-3 font-bold rounded flex items-center justify-center gap-2 transition-colors ${
+                        fixedFindings[selectedFinding.id]
+                          ? 'bg-core-bg border border-accent-verified text-accent-verified cursor-default'
+                          : 'bg-accent-verified text-core-bg hover:bg-[#FCD386]'
+                      }`}
+                    >
+                      <CheckCircle size={18} />
+                      {fixedFindings[selectedFinding.id] ? 'Fix Applied Successfully' : 'Apply Fix to File'}
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
           )}
         </div>
       </div>
+
+      {/* Custom Confirmation Modal */}
+      {fixConfirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-core-bg border border-core-border rounded-lg shadow-2xl p-8 max-w-md w-full mx-4">
+            <div className="flex items-center gap-4 mb-4 text-accent-signal">
+              <AlertTriangle size={32} />
+              <h2 className="text-xl font-bold font-heading text-white">Apply Automated Fix?</h2>
+            </div>
+            <p className="text-core-muted text-sm mb-8 leading-relaxed">
+              This will automatically modify the source code file on your disk. Are you sure you want to proceed?
+            </p>
+            <div className="flex gap-4 justify-end">
+              <button 
+                onClick={() => setFixConfirmModal(null)}
+                className="px-6 py-2 rounded font-semibold text-sm border border-core-border text-core-muted hover:text-white transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={confirmApplyFix}
+                className="px-6 py-2 rounded font-semibold text-sm bg-accent-verified text-core-bg hover:bg-[#FCD386] transition-colors flex items-center gap-2"
+              >
+                <CheckCircle size={16}/> Confirm Fix
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Error Modal */}
+      {fixError && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-core-bg border border-red-500/20 rounded-lg shadow-2xl p-8 max-w-md w-full mx-4">
+            <div className="flex items-center gap-4 mb-4 text-red-400">
+              <ShieldAlert size={32} />
+              <h2 className="text-xl font-bold font-heading text-white">Action Failed</h2>
+            </div>
+            <p className="text-core-muted text-sm mb-8 leading-relaxed font-mono">
+              {fixError}
+            </p>
+            <div className="flex justify-end">
+              <button 
+                onClick={() => setFixError(null)}
+                className="px-6 py-2 rounded font-semibold text-sm bg-core-surface border border-core-border text-white hover:bg-core-border transition-colors"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
+    </>
   );
 }

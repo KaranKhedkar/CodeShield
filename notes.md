@@ -172,3 +172,8 @@ We expanded CodeShield to accept both local directory paths and remote GitHub UR
 To support private repositories, the React frontend passes an optional GitHub Personal Access Token (PAT) which the backend securely injects into the HTTPS clone URL (e.g., \https://<token>@github.com/...\). 
 
 Crucially, because the 	empfile block cleans itself up automatically in the inally clause of the background task, the cloned repository is instantly deleted from disk as soon as the static analyzer and reachability engines finish scanning it. This ensures user hard drives aren't bloated with stale code repositories, since the UI only requires the snippet cached in the SQLite database to display the AI findings.
+
+### v1.3 Automated Code Remediation (Apply Fix)
+We upgraded the LangGraph Fixer node to output a strict, machine-readable JSON object containing \patch_target\ and \patch_replacement\ alongside the human-readable explanation. 
+
+This patch data is now saved directly into the SQLite database. If a finding contains a valid code patch, the React dashboard will render an **Apply Fix to File** button inside the AI Triage Details panel. Clicking this button hits a new \POST /apply_fix/{finding_id}\ backend endpoint, which performs a precise string replacement on the local file using Python, automatically securing the application without manual intervention.
