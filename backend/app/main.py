@@ -92,7 +92,7 @@ def perform_scan_task(target_dir: str, scan_id: str, git_token: Optional[str] = 
             }
 
         # Process all findings in parallel
-        with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
             results = list(executor.map(process_finding, findings_with_risk))
 
         # Save findings to DB

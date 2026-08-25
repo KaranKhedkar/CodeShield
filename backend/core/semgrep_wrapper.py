@@ -14,7 +14,7 @@ def run_semgrep(target_dir: str) -> List[Dict[str, Any]]:
         print(f"Running Semgrep on {target_dir}...")
         result = subprocess.run(
             [
-                "semgrep", "scan", "--config", "auto", "--json", "--jobs", "4",
+                "semgrep", "scan", "--config", "auto", "--json", "--jobs", "1",
                 "--exclude", "venv", "--exclude", "node_modules", "--exclude", ".git",
                 "--exclude", "build", "--exclude", "dist",
                 target_dir
