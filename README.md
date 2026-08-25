@@ -14,9 +14,16 @@
 
 *(Below are previews of the CodeShield UI)*
 
+### Landing Page
 ![Landing Page](docs/landing-page.png)
+
+### Dashboard Scan
 ![Dashboard](docs/dashboard.png)
+
+### Scanning Progress
 ![Scan](docs/scan.png)
+
+### AI Explanation & Fix
 ![Explanation](docs/explanation.png)
 
 ## Tech Stack
