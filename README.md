@@ -1,94 +1,127 @@
 # CodeShield 🛡️
 
-CodeShield is a local-first, AI-driven security triage tool designed to eliminate alert fatigue from static analysis scanners. 
+**CodeShield** is a next-generation Static Application Security Testing (SAST) tool powered by Agentic AI. It automatically scans codebases to detect vulnerabilities, filters out false positives using structural reachability analysis, and leverages a LangGraph-powered LLM agent to provide actionable explanations and 1-click automated code fixes.
 
-Static analyzers (like Semgrep) are incredibly fast at finding *potential* vulnerabilities but lack the context to determine if a vulnerability is *actually exploitable*. CodeShield acts as an AI security analyst on top of Semgrep, applying a multi-stage triage pipeline to drastically reduce false positives.
+## Key Features
 
-## 🚀 Features
+* **Advanced SAST Scanning:** Uses Semgrep to quickly identify security flaws in local codebases and remote GitHub repositories.
+* **Reachability Analysis:** Leverages Tree-sitter to analyze Python syntax trees, scoring risk and filtering out unreachable or "dead" code to drastically reduce false positives.
+* **Agentic AI Resolution:** Employs a LangGraph workflow and Groq (Llama-3) to investigate high-risk findings, verify vulnerabilities, and explain the root cause.
+* **Automated Remediation:** Synthesizes precise code patches and allows users to fix vulnerabilities directly from the UI with a 1-click "Apply Fix" button.
+* **RAG Knowledge Base:** Incorporates ChromaDB and Sentence-Transformers to ground AI responses in verified security rule documentation.
 
-- **Context-Aware AI Analysis**: Uses a local LLM to reason about exploitability based on surrounding code context.
-- **GitHub Repository Scanning**: Paste any GitHub URL (public or private) to instantly clone, scan, and securely clean up the codebase.
-- **RAG-Backed Security Guidelines**: Queries a local `ChromaDB` vector database containing OWASP Top 10 and CWE documentation to ground the analysis in vetted security standards.
-- **High-Performance Architecture**: 
-  - **Parallel Execution**: Uses concurrent thread pooling to process multiple vulnerabilities simultaneously, dramatically reducing scan time.
-  - **Threshold Filtering**: Intelligently bypasses LLM inference for low-risk findings to preserve compute resources.
-  - **Hybrid Persistent Caching**: Out-of-the-box SHA-256 fingerprint caching using SQLite to prevent duplicate LLM calls across rescans, with automatic fallback to **Redis** for distributed, ultra-fast caching in production.
-- **Modern Glassmorphism UI**: A beautifully crafted React dashboard that sorts findings by dynamic Risk Scores instead of raw JSON.
+## Screenshots / Demo
 
----
+*(Below are previews of the CodeShield UI)*
 
-## 📸 Screenshots
+| Landing Page | Dashboard Scan |
+| :---: | :---: |
+| ![Landing Page](docs/landing-page.png) | ![Dashboard](docs/dashboard.png) |
 
-*(Attach screenshots of the application below)*
+| Scanning Progress | AI Explanation & Fix |
+| :---: | :---: |
+| ![Scan](docs/scan.png) | ![Explanation](docs/explanation.png) |
 
-- **Landing Page**: 
-  ![Landing Page](./docs/landing-page.png)
+## Tech Stack
 
-- **Dashboard**:
-  ![Dashboard](./docs/dashboard.png)
+* **Frontend:** React, Vite, TailwindCSS, Lucide Icons
+* **Backend:** Python 3.13, FastAPI, Uvicorn
+* **Database & Cache:** SQLite (History tracking), Redis (LLM caching & performance)
+* **AI / ML:** LangGraph, LangChain, Groq (Llama-3), ChromaDB, Sentence-Transformers
+* **Deployment / DevOps:** Docker, Docker Compose, Nginx, Render (Backend), Vercel (Frontend)
 
-- **Scan Page**:
-  ![Scan Page](./docs/scan.png)
+## How It Works
 
-- **Vulnerability Explanation**:
-  ![Explanation](./docs/explanation.png)
+1. **Input:** The user provides a local directory path or a public GitHub URL in the React frontend.
+2. **Analysis:** The FastAPI backend enqueues a background task that clones the repository and runs `semgrep` for raw static analysis.
+3. **Filtering:** `tree-sitter-python` parses the AST (Abstract Syntax Tree) to determine if the vulnerable functions are actually reachable, assigning a calculated risk score.
+4. **Agentic Verification:** High-risk findings are dispatched to a LangGraph Agent. The agent queries ChromaDB (RAG) for the context of the specific Semgrep rule and prompts the Groq LLM to verify the finding and generate a patch.
+5. **Remediation:** The frontend retrieves the completed scan and displays the AI's explanation. The user can click "Apply Fix" to automatically replace the vulnerable code snippet with the AI-generated patch on disk.
 
----
+## Project Structure
 
-## 🧠 Architecture
-
-The system is decoupled into a high-performance backend and a modern frontend client:
-
-**Backend (FastAPI)**
-- **Static Analysis**: Semgrep CLI
-- **LLM Engine**: Local Ollama (e.g., Llama 3) with a graceful failover to the Groq API.
-- **Vector Database**: ChromaDB + `sentence-transformers` (`all-MiniLM-L6-v2`)
-- **Database / Caching**: SQLAlchemy, SQLite, Redis
-
-**Frontend (React/Vite)**
-- **Styling**: Tailwind CSS (Semantic Design Tokens)
-- **Icons**: Lucide React
-- **Architecture**: Client-side animated hero previews with polling-based dashboard data fetching.
-
----
-
-## 🛠️ Setup & Installation
-
-### Prerequisites
-1. **Python 3.10+**
-2. **Node.js 18+**
-3. **Semgrep** (`pip install semgrep`)
-4. *(Optional)* **Ollama**: Install [Ollama](https://ollama.com/) and pull a model (e.g., `ollama run llama3.1`). If you skip this, just provide a Groq API key in your `.env`.
-
-### 1. Start the Backend API
-```bash
-cd backend
-# Create and activate virtual environment
-python -m venv venv
-
-# Windows: 
-.\venv\Scripts\activate 
-#Mac/Linux: 
-source venv/bin/activate
-
-# Install dependencies
-pip install fastapi uvicorn sqlalchemy requests pydantic chromadb sentence-transformers python-dotenv redis
-
-# Build the RAG Corpus (only needed once)
-python rag/indexer.py
-
-# Set your Groq API key (if not using local Ollama)
-# Edit backend/.env and add: GROQ_API_KEY=your_key_here
-
-# Start the FastAPI server
-uvicorn app.main:app --host localhost --port 8000
+```text
+├── backend/
+│   ├── app/           # FastAPI application, routes, and background tasks
+│   ├── core/          # Semgrep execution wrapper and Tree-sitter reachability logic
+│   ├── db/            # SQLite models and session management
+│   ├── llm/           # LangGraph agent orchestration and Groq LLM integration
+│   ├── rag/           # ChromaDB retriever and Sentence-Transformers embedding setup
+│   ├── Dockerfile     # Production-ready Python backend container image
+│   └── requirements.txt
+├── frontend/
+│   ├── src/           # React components, pages, and Tailwind styling
+│   ├── nginx.conf     # Production Nginx web server config and API proxy routing
+│   ├── Dockerfile     # Multi-stage Node/Nginx frontend build
+│   └── package.json
+├── docs/              # UI Screenshots
+└── docker-compose.yml # Local development container orchestration
 ```
 
-### 2. Start the Frontend Dashboard
-```bash
-cd frontend
-npm install
-npm run dev
+## Installation & Setup
+
+You can easily run CodeShield locally using Docker.
+
+**Prerequisites:** Ensure you have [Docker](https://www.docker.com/products/docker-desktop/) and Docker Compose installed on your machine.
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/KaranKhedkar/CodeShield.git
+   cd CodeShield
+   ```
+
+2. **Setup Environment Variables**
+   Create a `.env` file in the `backend/` directory:
+   ```bash
+   touch backend/.env
+   ```
+   Add your Groq API key to the file (see section below).
+
+3. **Build and Run the Containers**
+   ```bash
+   docker-compose up --build
+   ```
+   *Note: On the first run, the backend will automatically download the required `all-MiniLM-L6-v2` Sentence-Transformer model.*
+
+4. **Access the Application**
+   Open your browser and navigate to `http://localhost`.
+
+## Environment Variables
+
+The backend requires the following environment variables. Do not commit your real `.env` file to version control.
+
+```env
+# backend/.env
+GROQ_API_KEY=your_groq_api_key_here
+
+# The following is handled automatically by Docker Compose, but can be overridden:
+REDIS_URL=redis://redis:6379/0
 ```
 
-Open your browser to `http://localhost:5173`. Enter the absolute path to a local repository and click **Run Scan**!
+## Usage
+
+1. Open the CodeShield dashboard at `http://localhost`.
+2. Enter a **GitHub Repository URL** (e.g., `https://github.com/KaranKhedkar/Amazon_clone`) or a valid absolute local path.
+3. Click **Scan**. CodeShield will process the codebase in the background.
+4. Once completed, review the list of detected vulnerabilities. Click on any finding to expand the AI's explanation, confidence score, and suggested code patch.
+5. Click **Apply Fix** to automatically write the AI's patch to the source code file (only works for local directory scans).
+
+## AI/ML Details
+
+CodeShield moves beyond traditional regex-based SAST tools by incorporating a specialized AI workflow:
+* **Models:** Uses `llama3-70b-8192` via Groq for high-speed, intelligent reasoning and code synthesis.
+* **Embeddings:** Uses `all-MiniLM-L6-v2` (via `sentence-transformers`) to generate semantic embeddings of security rules.
+* **Vector Database:** ChromaDB stores and retrieves security context, acting as the foundation for the Retrieval-Augmented Generation (RAG) pipeline.
+* **Agentic Orchestration:** LangGraph manages the decision-making loop. The AI is explicitly instructed to act as a Senior Security Engineer, combining the raw Semgrep output with retrieved RAG context to filter false positives and output deterministic JSON patches.
+
+## Future Improvements
+
+* **Multi-Language Reachability:** Expand the Tree-sitter reachability analysis (currently optimized for Python) to fully support JavaScript, TypeScript, and Go.
+* **Authentication & RBAC:** Implement user accounts and Role-Based Access Control to manage private scan histories.
+* **CI/CD Integration:** Develop a GitHub Action to automatically trigger CodeShield scans on pull requests.
+* **IDE Plugin:** Create a VSCode extension to run the agentic verification pipeline directly in the developer's editor.
+
+## Author
+
+**Karan Khedkar**
+- [GitHub](https://github.com/KaranKhedkar)
