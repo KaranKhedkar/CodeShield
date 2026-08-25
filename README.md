@@ -6,7 +6,7 @@
 
 * **Advanced SAST Scanning:** Uses Semgrep to quickly identify security flaws in local codebases and remote GitHub repositories.
 * **Reachability Analysis:** Leverages Tree-sitter to analyze Python syntax trees, scoring risk and filtering out unreachable or "dead" code to drastically reduce false positives.
-* **Agentic AI Resolution:** Employs a LangGraph workflow and Groq (GPT-OSS 120B) to investigate high-risk findings, verify vulnerabilities, and explain the root cause.
+* **Multi-Agent AI Resolution:** Employs a multi-agent LangGraph workflow (Security Analyst & Fix Engineer) and Groq (GPT-OSS 120B) to investigate high-risk findings, verify vulnerabilities, and explain the root cause.
 * **Automated Remediation:** Synthesizes precise code patches and allows users to fix vulnerabilities directly from the UI with a 1-click "Apply Fix" button.
 * **RAG Knowledge Base:** Incorporates ChromaDB and Sentence-Transformers to ground AI responses in verified security rule documentation.
 
@@ -116,7 +116,7 @@ CodeShield moves beyond traditional regex-based SAST tools by incorporating a sp
 * **Models:** Uses `GPT-OSS 120B` via Groq for high-speed, intelligent reasoning and code synthesis.
 * **Embeddings:** Uses `all-MiniLM-L6-v2` (via `sentence-transformers`) to generate semantic embeddings of security rules.
 * **Vector Database:** ChromaDB stores and retrieves security context, acting as the foundation for the Retrieval-Augmented Generation (RAG) pipeline.
-* **Agentic Orchestration:** LangGraph manages the decision-making loop. The AI is explicitly instructed to act as a Senior Security Engineer, combining the raw Semgrep output with retrieved RAG context to filter false positives and output deterministic JSON patches.
+* **Agentic Orchestration:** LangGraph manages a Multi-Agent decision-making loop. The system delegates tasks to a "Security Analyst" agent (to verify Semgrep findings against RAG context and filter false positives) and a "Fix Engineer" agent (to output deterministic JSON patches).
 
 ## Future Improvements
 
