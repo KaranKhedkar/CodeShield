@@ -27,7 +27,7 @@
 * **Frontend:** React, Vite, TailwindCSS, Lucide Icons
 * **Backend:** Python 3.13, FastAPI, Uvicorn
 * **Database & Cache:** SQLite (History tracking), Redis (LLM caching & performance)
-* **AI / ML:** LangGraph, LangChain, Groq (Llama-3), ChromaDB, Sentence-Transformers
+* **AI / ML:** LangGraph, LangChain, Groq (GPT-OSS 120B) / QWEN 3.2(locally via Ollama), ChromaDB, Sentence-Transformers(MiniLM)
 * **Deployment / DevOps:** Docker, Docker Compose, Nginx, Render (Backend), Vercel (Frontend)
 
 ## How It Works
@@ -109,7 +109,7 @@ REDIS_URL=redis://redis:6379/0
 ## AI/ML Details
 
 CodeShield moves beyond traditional regex-based SAST tools by incorporating a specialized AI workflow:
-* **Models:** Uses `llama3-70b-8192` via Groq for high-speed, intelligent reasoning and code synthesis.
+* **Models:** Uses `GPT-OSS 120B` via Groq for high-speed, intelligent reasoning and code synthesis.
 * **Embeddings:** Uses `all-MiniLM-L6-v2` (via `sentence-transformers`) to generate semantic embeddings of security rules.
 * **Vector Database:** ChromaDB stores and retrieves security context, acting as the foundation for the Retrieval-Augmented Generation (RAG) pipeline.
 * **Agentic Orchestration:** LangGraph manages the decision-making loop. The AI is explicitly instructed to act as a Senior Security Engineer, combining the raw Semgrep output with retrieved RAG context to filter false positives and output deterministic JSON patches.
