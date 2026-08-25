@@ -12,9 +12,10 @@ def run_semgrep(target_dir: str) -> List[Dict[str, Any]]:
         # Using subprocess to run the CLI tool directly.
         # Ensure semgrep is installed and available in PATH.
         print(f"Running Semgrep on {target_dir}...")
+        jobs = "1" if os.getenv("RENDER") else "4"
         result = subprocess.run(
             [
-                "semgrep", "scan", "--config", "auto", "--json", "--jobs", "1",
+                "semgrep", "scan", "--config", "auto", "--json", "--jobs", jobs,
                 "--exclude", "venv", "--exclude", "node_modules", "--exclude", ".git",
                 "--exclude", "build", "--exclude", "dist",
                 target_dir
