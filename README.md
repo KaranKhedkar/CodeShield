@@ -6,7 +6,7 @@
 
 * **Advanced SAST Scanning:** Uses Semgrep to quickly identify security flaws in local codebases and remote GitHub repositories.
 * **Reachability Analysis:** Leverages Tree-sitter to analyze Python syntax trees, scoring risk and filtering out unreachable or "dead" code to drastically reduce false positives.
-* **Agentic AI Resolution:** Employs a LangGraph workflow and Groq (Qwen3 8B) to investigate high-risk findings, verify vulnerabilities, and explain the root cause.
+* **Agentic AI Resolution:** Employs a LangGraph workflow and Groq (GPT-OSS 120B) to investigate high-risk findings, verify vulnerabilities, and explain the root cause.
 * **Automated Remediation:** Synthesizes precise code patches and allows users to fix vulnerabilities directly from the UI with a 1-click "Apply Fix" button.
 * **RAG Knowledge Base:** Incorporates ChromaDB and Sentence-Transformers to ground AI responses in verified security rule documentation.
 
