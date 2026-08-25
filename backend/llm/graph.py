@@ -13,14 +13,14 @@ api_key = os.environ.get("GROQ_API_KEY")
 if api_key:
     from langchain_groq import ChatGroq
     llm = ChatGroq(
-        model="llama3-70b-8192",  # Fast Groq Model
+        model="gpt-oss-120b",  # Fast Groq Model
         temperature=0.2,
         api_key=api_key,
     ).bind(response_format={"type": "json_object"})
 else:
     from langchain_community.chat_models import ChatOllama
     llm = ChatOllama(
-        model="qwen2.5:8b",  # Local Ollama Fallback
+        model="qwen3:8b",  # Local Ollama Fallback
         temperature=0.2,
         format="json"
     )
