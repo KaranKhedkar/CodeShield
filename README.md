@@ -6,28 +6,25 @@
 
 * **Advanced SAST Scanning:** Uses Semgrep to quickly identify security flaws in local codebases and remote GitHub repositories.
 * **Reachability Analysis:** Leverages Tree-sitter to analyze Python syntax trees, scoring risk and filtering out unreachable or "dead" code to drastically reduce false positives.
-* **Agentic AI Resolution:** Employs a LangGraph workflow and Groq (Llama-3) to investigate high-risk findings, verify vulnerabilities, and explain the root cause.
+* **Agentic AI Resolution:** Employs a LangGraph workflow and Groq (Qwen3 8B) to investigate high-risk findings, verify vulnerabilities, and explain the root cause.
 * **Automated Remediation:** Synthesizes precise code patches and allows users to fix vulnerabilities directly from the UI with a 1-click "Apply Fix" button.
 * **RAG Knowledge Base:** Incorporates ChromaDB and Sentence-Transformers to ground AI responses in verified security rule documentation.
 
-## Screenshots / Demo
+## Screenshots 
 
 *(Below are previews of the CodeShield UI)*
 
-| Landing Page | Dashboard Scan |
-| :---: | :---: |
-| ![Landing Page](docs/landing-page.png) | ![Dashboard](docs/dashboard.png) |
-
-| Scanning Progress | AI Explanation & Fix |
-| :---: | :---: |
-| ![Scan](docs/scan.png) | ![Explanation](docs/explanation.png) |
+![Landing Page](docs/landing-page.png)
+![Dashboard](docs/dashboard.png)
+![Scan](docs/scan.png)
+![Explanation](docs/explanation.png)
 
 ## Tech Stack
 
 * **Frontend:** React, Vite, TailwindCSS, Lucide Icons
 * **Backend:** Python 3.13, FastAPI, Uvicorn
 * **Database & Cache:** SQLite (History tracking), Redis (LLM caching & performance)
-* **AI / ML:** LangGraph, LangChain, Groq (GPT-OSS 120B) / QWEN 3.2(locally via Ollama), ChromaDB, Sentence-Transformers(MiniLM)
+* **AI / ML:** LangGraph, LangChain, Groq (GPT-OSS 120B) / QWEN 3 8B(locally via Ollama), ChromaDB, Sentence-Transformers(MiniLM)
 * **Deployment / DevOps:** Docker, Docker Compose, Nginx, Render (Backend), Vercel (Frontend)
 
 ## How It Works
