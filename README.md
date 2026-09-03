@@ -118,6 +118,18 @@ CodeShield moves beyond traditional regex-based SAST tools by incorporating a sp
 * **Vector Database:** ChromaDB stores and retrieves security context, acting as the foundation for the Retrieval-Augmented Generation (RAG) pipeline.
 * **Agentic Orchestration:** LangGraph manages a Multi-Agent decision-making loop. The system delegates tasks to a "Security Analyst" agent (to verify Semgrep findings against RAG context and filter false positives) and a "Fix Engineer" agent (to output deterministic JSON patches).
 
+## Empirical Benchmark Results
+
+CodeShield includes an automated benchmark suite (`backend/benchmarks/`) evaluating performance against standard SAST (Semgrep baseline) across ground-truth vulnerabilities (reachable exploits, dead/uncalled code, and sanitized inputs):
+
+| Metric | Baseline (Raw Semgrep) | CodeShield (AST + AI) | Impact |
+| :--- | :---: | :---: | :---: |
+| **Total Alerts Triaged** | `16` | `5` | **68.8% Alert Noise Reduction** |
+| **False Positives Eliminated** | `0` | `11 / 11` | **100.0% False Positive Elimination** |
+| **True Positives Retained** | `5` | `5` | **100.0% Safety Retention (0 False Negatives)** |
+
+*Detailed benchmark methodology and reproduction steps are documented in [docs/benchmark_results.md](docs/benchmark_results.md).*
+
 ## Future Improvements
 
 * **Multi-Language Reachability:** Expand the Tree-sitter reachability analysis (currently optimized for Python) to fully support JavaScript, TypeScript, and Go.

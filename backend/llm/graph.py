@@ -13,7 +13,7 @@ api_key = os.environ.get("GROQ_API_KEY")
 if api_key:
     from langchain_groq import ChatGroq
     llm = ChatGroq(
-        model="gpt-oss-120b",  # Fast Groq Model
+        model="openai/gpt-oss-120b",  # Fast Groq Model
         temperature=0.2,
         api_key=api_key,
     ).bind(response_format={"type": "json_object"})

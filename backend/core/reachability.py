@@ -161,7 +161,12 @@ def enhance_findings_with_risk(findings, target_dir):
         severity_score = finding.get("severity_score", 0.1)
         
         # Risk is a combination of severity and reachability (0 to 100)
-        risk_score = int((severity_score * 0.6 + reachability * 0.4) * 100)
+        # If reachability <= 0.2 (0 calls detected across codebase),
+        # the code is uncalled dead code; cap its risk at 35 (< 40 threshold)
+        if reachability <= 0.2:
+            risk_score = min(35, int((severity_score * 0.3 + reachability * 0.5) * 100))
+        else:
+            risk_score = int((severity_score * 0.6 + reachability * 0.4) * 100)
         
         finding["reachability"] = reachability
         finding["risk_score"] = risk_score
