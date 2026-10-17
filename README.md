@@ -120,7 +120,10 @@ CodeShield moves beyond traditional regex-based SAST tools by incorporating a sp
 
 ## Empirical Benchmark Results
 
-CodeShield includes an automated benchmark suite (`backend/benchmarks/`) evaluating performance against standard SAST (Semgrep baseline) across ground-truth vulnerabilities (reachable exploits, dead/uncalled code, and sanitized inputs):
+CodeShield includes automated benchmark suites (`backend/benchmarks/`) evaluating both false-positive noise reduction and RAG pipeline accuracy:
+
+### 1. SAST False Positive & Alert Noise Reduction
+Evaluated against standard SAST (Semgrep baseline) across ground-truth vulnerabilities (reachable exploits, dead/uncalled code, and sanitized inputs):
 
 | Metric | Baseline (Raw Semgrep) | CodeShield (AST + AI) | Impact |
 | :--- | :---: | :---: | :---: |
@@ -130,14 +133,31 @@ CodeShield includes an automated benchmark suite (`backend/benchmarks/`) evaluat
 
 *Detailed benchmark methodology and reproduction steps are documented in [docs/benchmark_results.md](docs/benchmark_results.md).*
 
+### 2. RAG Pipeline Evaluation (Information Retrieval & Generative Remediation)
+Evaluated across ChromaDB vector search (`all-MiniLM-L6-v2`) and LangGraph generative patch synthesis:
+
+| Evaluation Dimension | Metric | Score | Industry Benchmark | Status |
+| :--- | :--- | :---: | :---: | :---: |
+| **Retrieval Quality** | **Hit Rate @ 1 (HR@1)** | **100.0%** | > 80.0% | **PASS** |
+| **Retrieval Quality** | **Hit Rate @ 3 (HR@3)** | **100.0%** | > 90.0% | **PASS** |
+| **Retrieval Ranking** | **Mean Reciprocal Rank (MRR)** | **1.000** | > 0.850 | **OPTIMAL** |
+| **Retrieval Speed** | **Average Query Latency** | **14.0 ms** | < 50.0 ms | **REAL-TIME** |
+| **Generation Quality** | **Syntax Validity Rate** | **100.0%** | 100.0% | **PASS** |
+| **Functional Verification** | **Semgrep Pass@1 (Re-scan)** | **100.0%** | > 80.0% | **PASS** |
+
+*Detailed RAG evaluation breakdown, methodology, and formulas are documented in [docs/rag_evaluation_results.md](docs/rag_evaluation_results.md).*
+
 ## Future Improvements
 
-* **Multi-Language Reachability:** Expand the Tree-sitter reachability analysis (currently optimized for Python) to fully support JavaScript, TypeScript, and Go.
+* **Advanced RAG Evaluation (Ragas & LLM-as-a-Judge):** Integrate the Ragas framework to quantitatively measure **Context Relevance** (signal-to-noise ratio of retrieved security documentation) and **Context Recall** (completeness of extracted remediation constraints), using an LLM-as-a-Judge to grade explanation faithfulness against official OWASP guidelines.
+* **Corpus Scaling & Hard Negative Distractors:** Scale the vector database from curated core CWEs to 10,000+ real-world CVE and NIST advisory chunks, evaluating retrieval resilience (NDCG@K) against semantic chunk collisions.
 * **Authentication & RBAC:** Implement user accounts and Role-Based Access Control to manage private scan histories.
-* **CI/CD Integration:** Develop a GitHub Action to automatically trigger CodeShield scans on pull requests.
-* **IDE Plugin:** Create a VSCode extension to run the agentic verification pipeline directly in the developer's editor.
+* **Multi-Language Reachability:** Expand the Tree-sitter reachability analysis (currently optimized for Python) to fully support JavaScript, TypeScript, and Go.
+* **Dynamic Sandbox Verification:** Execute repository test suites (`pytest`) within ephemeral Docker containers to verify that generated security patches do not cause functional regressions.
+* **CI/CD Integration & IDE Plugin:** Develop a GitHub Action to trigger CodeShield scans on pull requests, alongside a VSCode extension for in-editor agentic remediation.
 
 ## Author
 
 **Karan Khedkar**
 - [GitHub](https://github.com/KaranKhedkar)
+

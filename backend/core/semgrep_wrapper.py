@@ -60,6 +60,10 @@ def run_semgrep(target_dir: str) -> List[Dict[str, Any]]:
             try:
                 if os.path.isabs(file_path):
                     actual_path = file_path
+                elif os.path.isfile(file_path):
+                    actual_path = file_path
+                elif os.path.isfile(target_dir):
+                    actual_path = target_dir
                 else:
                     # Resolve relative to the target_dir
                     actual_path = os.path.normpath(os.path.join(target_dir, file_path))

@@ -4,6 +4,8 @@ from typing import TypedDict, Dict, Any
 from langgraph.graph import StateGraph, START, END
 from dotenv import load_dotenv
 
+dotenv_path = os.path.join(os.path.dirname(__file__), "..", ".env")
+load_dotenv(dotenv_path)
 load_dotenv()
 
 # Dynamic LLM Provider Selection
